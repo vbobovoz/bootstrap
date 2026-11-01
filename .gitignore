@@ -1,0 +1,4 @@
+# Imported source is only an input to the merge; the shipped config is config/nvim.
+/temp/
+.DS_Store
+/nvim.log

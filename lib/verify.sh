@@ -19,11 +19,14 @@ verify_installation() {
         eza \
         btop \
         jq \
-        ghostty \
+        starship \
         nvim \
         rg \
         make \
         node \
+        go \
+        helm \
+        tree-sitter \
         npm
     do
         if command_exists "$command"; then
@@ -32,6 +35,10 @@ verify_installation() {
             missing+=("$command")
         fi
     done
+
+    if ! ghostty_available; then missing+=("Ghostty"); fi
+    if command_exists node && ! node_version_ok; then missing+=("Node.js >= ${NODE_VERSION}"); fi
+    if command_exists nvim && ! neovim_version_ok; then missing+=("Neovim >= 0.12"); fi
 
     if command_exists fd; then
         ok "fd -> $(command -v fd)"
@@ -63,7 +70,10 @@ print_next_steps() {
         "5. Verify Neovim:" \
         '   nvim --version' \
         "6. Verify fd:" \
-        '   fd --version'
+        '   fd --version' \
+        "7. Open Neovim, run :Mason and wait for language tools to install." \
+        "8. Run :checkhealth custom and :checkhealth vim.lsp." \
+        "9. After Ghostty config changes: reload config, then reset font zoom."
 
     printf '\n'
 }

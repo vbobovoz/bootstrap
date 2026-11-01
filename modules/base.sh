@@ -8,6 +8,7 @@ install_base() {
     pkg_install \
         git \
         curl \
+        ca-certificates \
         unzip \
         fontconfig \
         zoxide \

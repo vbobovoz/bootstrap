@@ -15,7 +15,7 @@ pkg_install_backend() {
     local package
 
     for package in "${packages[@]}"; do
-        if dpkg -s "$package" >/dev/null 2>&1; then
+        if [[ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" == 'install ok installed' ]]; then
             ok "already installed: ${package}"
         else
             missing+=("$package")
@@ -27,5 +27,5 @@ pkg_install_backend() {
     fi
 
     info "Installing packages via APT: ${missing[*]}"
-    run_sudo apt-get install -y "${missing[@]}"
+    run_sudo apt-get install -y --no-install-recommends "${missing[@]}"
 }

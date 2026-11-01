@@ -30,6 +30,10 @@ command_exists() {
 }
 
 run_sudo() {
+    if [[ "$(id -u)" == 0 ]]; then
+        "$@"
+        return
+    fi
     info "(sudo) $*"
     sudo "$@"
 }
@@ -49,9 +53,28 @@ backup_file() {
 
     local backup
     backup="${file}.bak.$(date +%Y%m%d_%H%M%S)"
+    while [[ -e "$backup" || -L "$backup" ]]; do backup="${backup}_"; done
 
     info "Backing up ${file} -> ${backup}"
     cp -a "$file" "$backup"
+}
+
+# Portable numeric comparison (also works in macOS Bash 3.2).
+version_at_least() {
+    local major minor patch expected_major expected_minor expected_patch
+    IFS=. read -r major minor patch <<< "${1%%[-+]*}"
+    IFS=. read -r expected_major expected_minor expected_patch <<< "${2%%[-+]*}"
+    [[ "$major" =~ ^[0-9]+$ && "${minor:-0}" =~ ^[0-9]+$ && "${patch:-0}" =~ ^[0-9]+$ ]] || return 1
+    if ((10#$major != 10#$expected_major)); then ((10#$major > 10#$expected_major))
+    elif ((10#${minor:-0} != 10#${expected_minor:-0})); then ((10#${minor:-0} > 10#${expected_minor:-0}))
+    else ((10#${patch:-0} >= 10#${expected_patch:-0})); fi
+}
+
+download_verified() {
+    local url="$1" checksum="$2" target="$3"
+    [[ "$checksum" =~ ^[0-9a-f]{64}$ ]] || die "Invalid SHA256 for ${url}"
+    curl -fsSL --retry 3 -o "$target" "$url"
+    printf '%s  %s\n' "$checksum" "$target" | sha256sum -c - >/dev/null || die "SHA256 mismatch: ${url}"
 }
 
 copy_file() {

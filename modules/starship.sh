@@ -98,7 +98,7 @@ install_starship_official() {
 
 install_starship_config() {
     local source="${ROOT_DIR}/config/starship/starship.toml"
-    local target="${HOME}/.config/starship.toml"
+    local target="${XDG_CONFIG_HOME:-${HOME}/.config}/starship.toml"
 
     [[ -f "$source" ]] ||
         die "Starship config not found: ${source}"

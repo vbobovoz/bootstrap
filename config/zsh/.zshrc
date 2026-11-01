@@ -2,6 +2,15 @@
 # Zinit
 # ---------------------------------------------------------
 
+# Homebrew may not be in PATH in a fresh macOS shell.
+if [[ "$OSTYPE" == darwin* ]] && ! command -v brew >/dev/null 2>&1; then
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+fi
+
 ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
 
 if [[ ! -d "$ZINIT_HOME" ]]; then
@@ -15,7 +24,10 @@ source "$ZINIT_HOME/zinit.zsh"
 # Environment
 # ---------------------------------------------------------
 
-export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
+if ! command -v go >/dev/null 2>&1 && [[ -x /usr/local/go/bin/go ]]; then
+    export PATH="/usr/local/go/bin:$PATH"
+fi
 
 export EDITOR="nvim"
 export VISUAL="$EDITOR"

@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-readonly TEST_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+TEST_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly TEST_ROOT
 
 fail() {
     printf 'FAIL: %s\n' "$*" >&2
@@ -70,7 +71,6 @@ test_failed_verification_is_fatal() {
         install_ghostty() { :; }
         verify_installation() { return 1; }
         print_next_steps() { :; }
-        print_nvim_ssh_next_steps() { :; }
 
         main
     ) >/dev/null 2>&1; then
@@ -88,5 +88,8 @@ test_package_map
 test_multi_package_resolution
 test_failed_verification_is_fatal
 test_no_remote_shell_pipes
+bash "${TEST_ROOT}/tests/nvim-install.sh"
+bash "${TEST_ROOT}/tests/platforms.sh"
+bash "${TEST_ROOT}/tests/standalone.sh"
 
 printf 'All tests passed\n'

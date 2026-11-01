@@ -23,7 +23,13 @@ pkg_name() {
 
         7zip)
             case "$DISTRO_FAMILY" in
-                debian) printf '%s\n' "p7zip-full" ;;
+                debian)
+                    if [[ "${DISTRO:-}" == ubuntu && "${VERSION_ID:-}" == 26.04 ]]; then
+                        printf '%s\n' "7zip"
+                    else
+                        printf '%s\n' "p7zip-full"
+                    fi
+                    ;;
                 arch)   printf '%s\n' "7zip" ;;
                 macos)  printf '%s\n' "p7zip" ;;
                 *)      printf '%s\n' "7zip" ;;

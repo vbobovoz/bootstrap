@@ -7,57 +7,71 @@
 install_neovim() {
     info "Installing Neovim and dependencies"
 
-    if [[ "$DISTRO_FAMILY" == "debian" ]]; then
-        configure_neovim_ppa
+    pkg_install build-tools ripgrep fd unzip curl wget ca-certificates
+    if [[ "$DISTRO" == ubuntu ]]; then
+        install_neovim_ubuntu
+    else
+        pkg_install neovim nodejs
     fi
-
-    pkg_install \
-	    neovim \
-	    build-tools \
-	    ripgrep \
-	    fd \
-	    unzip \
-	    curl \
-	    ca-certificates \
-	    nodejs
 
     install_neovim_platform_extras
     ensure_fd_command
-
+    hash -r
+    if ! neovim_version_ok; then
+        if [[ "$DISTRO_FAMILY" == macos ]]; then
+            brew upgrade neovim
+            hash -r
+        fi
+        neovim_version_ok || die "Neovim 0.12+ is required; check which nvim is first on PATH"
+    fi
     ok "Neovim dependencies installed"
 }
 
-configure_neovim_ppa() {
-    if [[ "$DISTRO" != "ubuntu" ]]; then
+neovim_version_ok() {
+    command_exists nvim || return 1
+    local version
+    version="$(nvim --version | sed -n '1s/^NVIM v//p')"
+    version_at_least "$version" 0.12.0
+}
+
+install_neovim_ubuntu() {
+    if neovim_version_ok; then
+        ok "Neovim 0.12+ is already installed"
         return 0
     fi
-
-    if apt-cache policy neovim 2>/dev/null | grep -q 'neovim-ppa'; then
-        ok "Neovim PPA already configured"
-        return 0
-    fi
-
-    if ! command_exists add-apt-repository; then
-        warn "add-apt-repository not found; using distro Neovim package"
-        return 0
-    fi
-
-    info "Adding Neovim unstable PPA"
-
-    if run_sudo add-apt-repository -y ppa:neovim-ppa/unstable; then
-        pkg_update
-    else
-        warn "Failed to add Neovim PPA; using distro package"
-    fi
+    local arch checksum tmp target
+    case "$(linux_tool_arch)" in
+        amd64)
+            arch=x86_64
+            checksum="474430d53e6264f6d6dd18db42d6dc9df3a1b56ca9e88a325bbf860e1a811d87"
+            ;;
+        arm64)
+            arch=arm64
+            checksum="8f1f64a0bdb97247034038c3823c6cbad5bdf9ecd5751b85494b71c3ee04c815"
+            ;;
+    esac
+    tmp="$(mktemp -d)"
+    target=/opt/bootstrap/nvim-0.12.6
+    download_verified "https://github.com/neovim/neovim/releases/download/v0.12.6/nvim-linux-${arch}.tar.gz" "$checksum" "$tmp/nvim.tar.gz"
+    run_sudo mkdir -p "$target" /usr/local/bin
+    run_sudo tar -xzf "$tmp/nvim.tar.gz" -C "$target" --strip-components=1
+    run_sudo ln -sfn "$target/bin/nvim" /usr/local/bin/nvim
+    rm -rf "$tmp"
+    hash -r
 }
 
 install_neovim_platform_extras() {
     case "$DISTRO_FAMILY" in
-        debian|arch)
-            pkg_install \
-                npm \
-                xclip \
-                wl-clipboard
+        debian)
+            pkg_install xclip wl-clipboard python3 python3-venv python3-pip
+            if [[ "$DISTRO" == ubuntu ]]; then
+                install_ubuntu_dev_tools
+            else
+                pkg_install npm
+            fi
+            ;;
+        arch)
+            pkg_install npm xclip wl-clipboard
             ;;
 
         alpine)
@@ -66,7 +80,13 @@ install_neovim_platform_extras() {
             ;;
 
         macos)
+            install_node
+            pkg_install_if_missing python3 python
             # npm comes with Homebrew's node package.
+            # Go is needed by gopls/goimports; Helm enables chart linting.
+            pkg_install_if_missing go go
+            pkg_install_if_missing helm helm
+            pkg_install_if_missing tree-sitter tree-sitter-cli
             ;;
 
         *)

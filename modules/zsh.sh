@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # ------------------------------------------------------------
 # Zsh
 # ------------------------------------------------------------
@@ -19,7 +21,7 @@ install_zsh() {
 
 install_zsh_config() {
     local source="${ROOT_DIR}/config/zsh/.zshrc"
-    local target="${HOME}/.zshrc"
+    local target="${ZDOTDIR:-${HOME}}/.zshrc"
 
     [[ -f "$source" ]] || die "Zsh config not found: ${source}"
 

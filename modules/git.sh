@@ -11,6 +11,12 @@ install_git() {
         pkg_install git
     fi
 
+    local git_config="${GIT_CONFIG_GLOBAL:-${XDG_CONFIG_HOME:-${HOME}/.config}/git/config}"
+    if [[ -z "${GIT_CONFIG_GLOBAL:-}" && ( -e "${HOME}/.gitconfig" || -L "${HOME}/.gitconfig" ) ]]; then
+        git_config="${HOME}/.gitconfig"
+    fi
+    backup_file "$git_config"
+
     git config --global pull.rebase false
     git config --global rerere.enabled true
     git config --global push.autoSetupRemote true

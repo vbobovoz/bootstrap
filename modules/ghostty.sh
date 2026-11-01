@@ -7,16 +7,23 @@
 readonly GHOSTTY_UBUNTU_VERSION="1.3.1-0.ppa2"
 readonly GHOSTTY_UBUNTU_RELEASE="1.3.1-0-ppa2"
 
+ghostty_available() {
+    command_exists ghostty && return 0
+    [[ "$DISTRO_FAMILY" == macos ]] || return 1
+    [[ -x /Applications/Ghostty.app/Contents/MacOS/ghostty ]] && return 0
+    command_exists brew && brew list --cask ghostty >/dev/null 2>&1
+}
+
 install_ghostty() {
     info "Installing and configuring Ghostty"
 
-    if command_exists ghostty; then
+    if ghostty_available; then
         ok "already installed: ghostty"
     else
         install_ghostty_package
     fi
 
-    if command_exists ghostty; then
+    if ghostty_available; then
         install_ghostty_config
         configure_default_terminal
         ok "Ghostty configured"
@@ -139,7 +146,7 @@ install_ghostty_ubuntu_release() {
 
 install_ghostty_config() {
     local source="${ROOT_DIR}/config/ghostty/config"
-    local target="${HOME}/.config/ghostty/config"
+    local target="${XDG_CONFIG_HOME:-${HOME}/.config}/ghostty/config"
 
     [[ -f "$source" ]] ||
         die "Ghostty config not found: ${source}"
@@ -161,7 +168,7 @@ configure_default_terminal() {
 
 configure_default_terminal_linux() {
     local source="${ROOT_DIR}/config/ghostty/xdg-terminals.list"
-    local target="${HOME}/.config/xdg-terminals.list"
+    local target="${XDG_CONFIG_HOME:-${HOME}/.config}/xdg-terminals.list"
 
     if [[ -f "$source" ]]; then
         copy_file "$source" "$target"
@@ -204,6 +211,9 @@ configure_debian_terminal_alternative() {
 
         ok "Ghostty set as x-terminal-emulator"
     else
-        warn "Ghostty is not registered as an x-terminal-emulator alternative"
+        run_sudo update-alternatives \
+            --install /usr/bin/x-terminal-emulator x-terminal-emulator "$ghostty_path" 50
+        run_sudo update-alternatives --set x-terminal-emulator "$ghostty_path"
+        ok "Ghostty registered as x-terminal-emulator"
     fi
 }

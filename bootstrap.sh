@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-readonly REPO_OWNER="ukondoby"
+readonly REPO_OWNER="vbobovoz"
 readonly REPO_NAME="bootstrap"
 readonly REPO_BRANCH="main"
 
-readonly ARCHIVE_URL="https://gitlab.com/${REPO_OWNER}/${REPO_NAME}/-/archive/${REPO_BRANCH}/${REPO_NAME}-${REPO_BRANCH}.tar.gz"
+readonly ARCHIVE_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${REPO_BRANCH}.tar.gz"
 
 TMP_DIR=""
 
@@ -53,7 +53,7 @@ main() {
 
     printf '==> Starting installer\n'
 
-    "${repo_dir}/install.sh"
+    "${repo_dir}/install.sh" "$@"
 }
 
 main "$@"

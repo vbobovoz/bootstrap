@@ -2,7 +2,8 @@ theme = CGA
 
 font-family = Lilex Nerd Font
 font-style = Regular
-font-size = 11
+font-size = 13
+window-inherit-font-size = false
 font-feature = calt
 font-feature = liga
 font-feature = clig
@@ -33,10 +34,22 @@ keybind = ctrl+enter=toggle_split_zoom
 
 keybind = control+shift+c=copy_to_clipboard:plain
 
-keybind = ctrl+shift+left=goto_split:left
-keybind = ctrl+shift+down=goto_split:down
-keybind = ctrl+shift+up=goto_split:up
-keybind = ctrl+shift+right=goto_split:right
+# Forward selection and word motions to Neovim instead of switching splits.
+keybind = shift+left=csi:1;2D
+keybind = shift+right=csi:1;2C
+keybind = shift+up=csi:1;2A
+keybind = shift+down=csi:1;2B
+keybind = ctrl+left=csi:1;5D
+keybind = ctrl+right=csi:1;5C
+keybind = ctrl+shift+left=csi:1;6D
+keybind = ctrl+shift+right=csi:1;6C
+keybind = ctrl+shift+up=csi:1;6A
+keybind = ctrl+shift+down=csi:1;6B
+
+keybind = cmd+ctrl+left=goto_split:left
+keybind = cmd+ctrl+down=goto_split:down
+keybind = cmd+ctrl+up=goto_split:up
+keybind = cmd+ctrl+right=goto_split:right
 
 mouse-scroll-multiplier = 0.95
 gtk-single-instance = true
