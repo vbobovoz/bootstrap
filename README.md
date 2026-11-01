@@ -1,78 +1,121 @@
 # Bootstrap
 
-Мой рабочий сетап для macOS и Ubuntu: Ghostty, Zsh, Starship, Neovim,
-Lazygit, Yazi и CLI-инструменты. Все собственные настройки хранятся в этой репе, включая полный конфиг Neovim
-в `config/nvim`. Отдельные личные репозитории для установки не нужны.
+A terminal and development environment for macOS and Ubuntu, with Ghostty, Zsh,
+Starship, Neovim, Lazygit, Yazi, and everyday CLI tools. Configuration lives in
+this repository and can be applied as a complete setup or one component at a time.
 
-## Новый компьютер
+## Supported platforms
 
-Поддерживаемые цели: macOS с Homebrew и Ubuntu **24.04 / 26.04 LTS**.
-Ubuntu-бинарники предусмотрены для amd64 и arm64. Остальные пакетные
-бэкенды сохранены, но не считаются проверенными целями этого сетапа.
+- **macOS** with [Homebrew](https://brew.sh/).
+- **Ubuntu 24.04 and 26.04 LTS**, with amd64 and arm64 binaries.
 
-### macOS
+Other package-manager backends are included but have not been validated for the
+complete setup. See [platform validation](tests/VALIDATION.md) for test coverage.
 
-1. Установить Command Line Tools: `xcode-select --install`, дождаться завершения.
-2. Установить [Homebrew](https://brew.sh/) и выполнить предложенную им команду
-   `brew shellenv` для своего Mac. Bootstrap сам Homebrew не устанавливает.
-3. Клонировать репозиторий и запустить установку **от своего пользователя**:
+## Set up a new machine
+
+### macOS prerequisites
+
+Install the Xcode Command Line Tools and wait for installation to finish:
 
 ```bash
-git clone https://github.com/vbobovoz/bootstrap.git
-cd bootstrap
-bash install.sh
+xcode-select --install
 ```
 
-### Ubuntu
+Install [Homebrew](https://brew.sh/) and follow its instructions to add
+`brew shellenv` to your shell environment. Bootstrap expects Homebrew to be
+available; it does not install it.
 
-Нужны доступ к интернету, `sudo` и репозитории Ubuntu с включённым `universe`.
-Установка Ghostty рассчитана на машину с графическим рабочим столом.
+### Ubuntu prerequisites
+
+Use an account with `sudo` access and enable the Ubuntu `universe` repository.
+Install curl, Git, and CA certificates:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y git ca-certificates
+sudo apt-get install -y curl git ca-certificates
+```
+
+The full setup includes Ghostty and is intended for a graphical desktop.
+For a server, install only the components you need.
+
+### Install
+
+After completing the prerequisites, run the full installer with one command:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/vbobovoz/bootstrap/main/bootstrap.sh)" --
+```
+
+This downloads the `main` branch into a temporary directory, runs the installer,
+and removes the temporary files afterward. It requires the repository to be
+publicly accessible. You can pass the same options as `install.sh`, for example:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/vbobovoz/bootstrap/main/bootstrap.sh)" -- --only neovim
+```
+
+Alternatively, keep a local checkout for editing configuration and pulling updates:
+
+```bash
 git clone https://github.com/vbobovoz/bootstrap.git
 cd bootstrap
 bash install.sh
 ```
 
-Если репозиторий приватный, сначала настроить доступ GitHub и использовать
-авторизованный HTTPS либо SSH URL. Приватный GitLab товарища больше не нужен.
+Run the installer as your normal user. It requests elevated privileges for system
+operations. A full installation installs packages, applies configuration with
+backups, sets global Git preferences, and makes Zsh your login shell.
 
-Полная установка ставит пакеты, заменяет конфиги с бэкапами, применяет настройки
-Git и выбирает Zsh как login shell. Не запускать весь скрипт через `sudo`:
-права будут запрошены только для системных операций. На Ubuntu используются
-APT и закреплённые релизы Neovim, Node.js, Go, Helm и Tree-sitter с проверкой SHA256;
-они размещаются в `/opt/bootstrap` и `/usr/local/bin`. Не добавляется unstable PPA.
-На Ubuntu 24.04 Ghostty берётся из закреплённого [community-релиза](https://github.com/mkasberg/ghostty-ubuntu)
-с проверкой SHA256, на 26.04 — из APT.
-На macOS пакеты ставятся через Homebrew. Node.js проверяется отдельно: нужна
-стабильная **26.13.0 LTS или новее**; старая установленная версия больше не
-считается достаточной. Если впереди Homebrew стоит старая Node из nvm/asdf/mise,
-установщик сообщит об этом вместо ложного успеха.
+On macOS, packages are managed through Homebrew. On Ubuntu, the installer uses
+APT and checksum-verified release downloads for tools that need newer versions.
+Downloaded tools are installed under `/opt/bootstrap` and `/usr/local/bin`.
+Neovim requires **0.12 or later**; Node.js requires a stable **26.13.0 or later**.
 
-После установки:
+After installation:
 
-1. Перезайти в систему или открыть новую login shell.
-2. Открыть Ghostty: настроены Lilex Nerd Font и размер **13 pt**.
-3. Запустить `nvim`, открыть файл проекта, выполнить `:Mason` и дождаться установки
-   инструментов текущего языка. Первый запуск скачивает плагины и парсеры; может занять время.
-4. В Neovim выполнить `:checkhealth custom` и `:checkhealth vim.lsp`.
-5. В терминале: `bash install.sh --check`.
+1. Open a new login shell, then launch Ghostty.
+2. Start `nvim` and open a project file. The first launch downloads plugins and
+   parsers; language tools are installed as their file types are opened.
+3. Use `:Mason` to inspect language-tool installation, then run
+   `:checkhealth custom` and `:checkhealth vim.lsp`.
+4. Run `bash install.sh --check` to verify the installed tools.
 
-На Ubuntu без GUI, например на сервере, удобнее поставить только Neovim:
+Set up your Git identity, SSH keys, cloud credentials, kubeconfig, and any AI
+service authentication separately.
 
-```bash
-bash install.sh --only neovim
-```
+## Install or configure individual components
 
-Clipboard в SSH-сессии зависит от терминала и окружения; наличие `xclip` /
-`wl-clipboard` само по себе не создаёт графическую сессию на сервере.
+Run commands from the repository root. `--only` installs a component and applies
+its configuration where available. `--config` applies configuration without
+installing packages.
 
-## Как обновлять
+| Task | Command |
+| --- | --- |
+| Install the full environment | `bash install.sh` |
+| Install Neovim, its dependencies, and its configuration | `bash install.sh --only neovim` |
+| Install Ghostty and its configuration | `bash install.sh --only ghostty` |
+| Install or update Node.js and npm | `bash install.sh --only node` |
+| Install the terminal font | `bash install.sh --only fonts` |
+| Apply Neovim configuration | `bash install.sh --config nvim` |
+| Apply Ghostty configuration | `bash install.sh --config ghostty` |
+| Apply Zsh configuration | `bash install.sh --config zsh` |
+| Apply Starship configuration | `bash install.sh --config starship` |
+| Apply global Git preferences | `bash install.sh --config git` |
+| Apply Neovim and Ghostty configurations | `bash install.sh --editor-config-only` |
+| Apply Neovim, Ghostty, Zsh, and Starship configurations | `bash install.sh --configs-only` |
+| Verify installed tools | `bash install.sh --check` |
+| Show all options | `bash install.sh --help` |
 
-Править исходники в `config/`, коммитить и пушить их в эту репу.
-На другом устройстве:
+Available modules: `base`, `git`, `zsh`, `starship`, `fonts`, `lazygit`, `yazi`,
+`node`, `neovim`, and `ghostty`. Select one module per invocation.
+`--only zsh` also changes the login shell; `--config zsh` only copies the file.
+`--only neovim` leaves Ghostty, fonts, Lazygit, and Yazi to their own modules.
+
+## Update your setup
+
+Edit the source files in `config/`, test your changes, and commit them to this
+repository. To apply the current configuration on another machine:
 
 ```bash
 cd bootstrap
@@ -80,86 +123,102 @@ git pull --ff-only
 bash install.sh --configs-only
 ```
 
-Это применяет конфиги **Neovim, Ghostty, Zsh и Starship**, без установки пакетов,
-смены login shell и изменения Git-настроек. Если появились новые системные
-зависимости, отдельно запустить нужный модуль или полную установку.
+This applies the four file-based configurations without installing packages,
+changing the login shell, or changing Git preferences. Run the relevant
+`--only` module when you also need to install dependencies.
 
-| Задача | Команда из корня репозитория |
-|---|---|
-| Только конфиг Neovim | `bash install.sh --config nvim` |
-| Только конфиг Ghostty | `bash install.sh --config ghostty` |
-| Только `.zshrc` | `bash install.sh --config zsh` |
-| Только Starship | `bash install.sh --config starship` |
-| Только настройки Git | `bash install.sh --config git` |
-| Конфиги Neovim + Ghostty | `bash install.sh --editor-config-only` |
-| Все четыре файловых конфига | `bash install.sh --configs-only` |
-| Установить Neovim с зависимостями и конфигом | `bash install.sh --only neovim` |
-| Установить Ghostty с конфигом | `bash install.sh --only ghostty` |
-| Обновить Node.js и npm | `bash install.sh --only node` |
-| Установить шрифт | `bash install.sh --only fonts` |
-| Проверить основные команды и версию Neovim | `bash install.sh --check` |
-| Все параметры | `bash install.sh --help` |
+Restart Neovim and open a new shell after applying changes. Reload Ghostty with
+**Cmd+Shift+,** on macOS or **Ctrl+Shift+,** on Linux. Reset any manual font zoom
+with **Cmd+0** or **Ctrl+0**.
 
-Для `--only` также доступны `base`, `git`, `zsh`, `starship`, `lazygit`, `yazi`.
-Модуль устанавливает свой инструмент и его конфиг, если он есть; `zsh` также
-меняет login shell, `git` — глобальные Git-настройки. `--only neovim` не ставит
-Ghostty, шрифт, Lazygit и Yazi: их можно добавить отдельно.
-Старый флаг `--nvim-config-only` остаётся алиасом `--config nvim`.
+### Neovim plugin versions
 
-После обновления Ghostty: **Cmd+Shift+,** на Mac / **Ctrl+Shift+,** на Linux.
-Если в окне менялся масштаб, сбросить его через **Cmd+0 / Ctrl+0**.
-После обновления Neovim — перезапустить редактор; после `.zshrc` — новую shell.
+Plugin revisions are recorded in `config/nvim/nvim-pack-lock.json`. After applying
+an updated configuration to an existing installation, close other Neovim instances,
+open Neovim, and synchronize plugins with the lockfile:
 
-## Что внутри
+```vim
+:lua vim.pack.update(nil, { target = 'lockfile' })
+```
 
-- **Ghostty:** Lilex Nerd Font 13 pt, новый размер не наследует ручной zoom.
-- **Zsh:** Zinit, дополнение Tab через fzf-tab, autosuggestions, подсветка команд,
-  zoxide, алиасы eza/Git. Плагины скачиваются при первом запуске shell.
-- **Neovim 0.12+:** тёмная Kanagawa Wave, логотип NVIM, цветные скобки, путь файла
-  справа внизу; Go, Python, Lua, JSON, YAML, GitLab CI, Compose, Kubernetes,
-  Helm, Dockerfile и Bash. Go/Python/Lua форматируются при сохранении,
-  YAML/Bash — вручную. Автосохранение текущего файла при потере фокуса включено.
-  Автоактивации venv и собственного подбора Python-окружения нет.
-- **Навигация:** `Space f g` — текст по проекту, `Space f f` — файл,
-  `Shift+стрелки` — выделение, `Ctrl+Shift+←/→` — выделение по словам, `y` — копия.
-- **CLI:** Git, Lazygit, Yazi, zoxide, eza, btop, rg, fd, fzf, jq, ddgr и инструменты
-  превью/архивов. NeoCodeium и Sidekick в Neovim требуют собственной авторизации
-  и установленных CLI-агентов; bootstrap учётные данные не переносит.
+Review and confirm the changes, then restart Neovim.
 
-Подробнее: [настройки Neovim](config/nvim/README.md),
-[горячие клавиши](config/nvim/doc/SHORTCUTS.md).
+To intentionally update plugin versions, run `:lua vim.pack.update()`, test the
+result, and copy the installed `nvim-pack-lock.json` back into `config/nvim/`
+before committing.
 
-## Конфиги и бэкапы
+## What's included
 
-Конфиги **копируются**, а не связываются с репой. Правки непосредственно в
-`~/.config/nvim` и других установленных файлах автоматически назад не попадут.
-При замене старый файл/каталог сохраняется рядом с суффиксом `.bak.ДАТА_ВРЕМЯ`.
-Neovim сохраняется целым каталогом, включая локальные изменения. Перед возвратом
-бэкапа закрыть приложение, отложить текущий конфиг и вернуть бэкап на его место.
+- **Ghostty:** Lilex Nerd Font at 13 pt, with a consistent initial font size.
+- **Zsh:** Zinit, fzf-tab completion, autosuggestions, syntax highlighting,
+  zoxide, and eza/Git aliases. Shell plugins download on the first interactive run.
+- **Starship:** a shared prompt configuration for both platforms.
+- **Neovim:** Kanagawa Wave, rainbow brackets, completion, a project-relative file
+  path in the status line, file navigation, Git integration, and persistent sessions.
+- **Language support:** Go, Python, Lua, JSON, YAML, GitLab CI, Docker Compose,
+  Kubernetes manifests, Helm templates, Dockerfiles, and Bash. Language tools
+  include LSP servers, schema validation, formatters, and linters.
+- **Editing:** format on save for Go, Python, and Lua; manual formatting for YAML
+  and Bash; autosave when the editor loses focus. Python virtual environments
+  are not automatically activated.
+- **CLI tools:** Lazygit, Yazi, ripgrep, fd, fzf, jq, eza, zoxide, btop, and tools
+  for previews and archives.
 
-Пути: `${XDG_CONFIG_HOME:-$HOME/.config}` для Neovim/Ghostty/Starship,
-`${ZDOTDIR:-$HOME}/.zshrc` для Zsh. Существующий конфиг Ghostty в
-`~/Library/Application Support/com.mitchellh.ghostty/` может переопределять
-настройки из `~/.config/ghostty` на Mac — не держать конфликтующие настройки в двух местах.
+### Essential Neovim shortcuts
 
-Обновления плагинов Neovim (`:lua vim.pack.update()`) меняют установленный
-`nvim-pack-lock.json`. После намеренного обновления скопировать его в
-`config/nvim/nvim-pack-lock.json`, проверить и закоммитить. При переносе lockfile на существующую установку выполнить
-`:lua vim.pack.update(nil, { target = "lockfile" })` и подтвердить изменения.
-SSH-ключи,
-Git user.name/email, kubeconfig, облачные учётные данные, Docker и доступ к кластерам
-на новом компьютере настраиваются отдельно.
+The leader key is **Space**. Press the keys in sequence for leader shortcuts.
 
-## Проверки репозитория
+| Action | Keys |
+| --- | --- |
+| Find a file | `Space f f` |
+| Search project text | `Space f g` |
+| Search the word or selection | `Space f w` |
+| Open Lazygit | `Space Space` |
+| Open Yazi | `Space o` |
+| Format the current file | `Space F` |
+| Select text | `Shift` + arrow keys |
+| Move by word | `Ctrl` + `←` / `→` |
+| Select by word | `Ctrl` + `Shift` + `←` / `→` |
+| Copy the selection to the clipboard | `y` |
+| Create or open a file | `:edit path/to/file` |
+| Save the file | `:write` |
+
+See the [Neovim configuration guide](config/nvim/README.md) and
+[full shortcut reference](config/nvim/doc/SHORTCUTS.md) for more details.
+
+## Configuration and backups
+
+Configuration files are copied into place. Changes made to installed files do
+not automatically propagate back to this repository.
+
+| Component | Destination |
+| --- | --- |
+| Neovim | `${XDG_CONFIG_HOME:-$HOME/.config}/nvim/` |
+| Ghostty | `${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config` |
+| Starship | `${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml` |
+| Zsh | `${ZDOTDIR:-$HOME}/.zshrc` |
+
+Before replacement, existing configuration is backed up beside its destination
+with a `.bak.DATE_TIME` suffix. Neovim is replaced as a complete directory so
+that leftover configuration files do not interfere. Close Neovim before applying
+its configuration. Plugin data, undo history, and saved sessions are retained.
+
+To restore a backup, close the application, move the current configuration aside,
+and put the backup at the original path.
+
+On macOS, a Ghostty configuration under
+`~/Library/Application Support/com.mitchellh.ghostty/` can override the settings
+installed here. Keep font and theme settings consistent if both locations exist.
+
+## Development checks
 
 ```bash
 bash tests/run.sh
 make -C config/nvim check
 ```
 
-Для второй команды нужны Neovim 0.12+, скачанные плагины и StyLua
-(устанавливается Mason). Проверки не заменяют запуск GUI и проверку clipboard
-в реальной desktop-сессии. Shell-тесты проверяют маршруты CLI, бэкапы,
-повторное применение и платформенную логику без установки пакетов в систему.
-
-Результаты проверки платформ и ограничения: [tests/VALIDATION.md](tests/VALIDATION.md).
+The shell tests cover CLI routing, backups, repeated configuration application,
+and platform logic without installing system packages. Neovim checks require
+Neovim 0.12+, cached plugins, and StyLua, which can be installed through Mason.
+Desktop behavior and clipboard integration also need verification in a real
+terminal session.
